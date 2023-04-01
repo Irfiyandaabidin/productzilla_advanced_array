@@ -2564,13 +2564,15 @@ const newData = data.map((d) => {
         storeLocation : d.storeLocation,
         userEmail : d.customer.email,
         purchaseMethod : d.purchaseMethod,
-        item : {
-            name: d.items[0].name,
-            quantity: d.items[0].quantity.$numberInt,
-            price: d.items[0].price.$numberDecimal
+        item : d.items.map(i => {
+            return {
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price}
+        })
         }
     }
-})
+)
 console.log(newData, '\n\n')
 console.log('=====================================================');
 
