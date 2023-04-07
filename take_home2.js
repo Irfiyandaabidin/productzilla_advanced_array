@@ -2557,142 +2557,179 @@ const data = [
     },
 ];
 
-const arr = [
-    { nama: ['biskuit'], harga: 500},
-    { nama: 'minuman', harga: 1000},
-    { nama: 'ciki', harga: 250},
-]
-
-arr[0].nama.push('roti')
-console.log('===============', arr)
-
-
-function forEach(data) {
-    console.log('================== for each ======================')
-    data.forEach((d) => {
-        console.log(d.nama);
-        console.log(d.harga);
-    })
-    console.log('==========================')
-}
-
-function forof(data) {
-    console.log('================== for of ======================')
-    for (const d of data) {
-        console.log(d);
-        console.log(d.nama);
-        console.log(d.harga);
-    }
-    console.log('==========================');
-}
-
-function forin(data) {
-    console.log('================== for in ======================')
-    for (const d in data) {
-        console.log(data[d]);
-        console.log(data[d].nama);
-        console.log(data[d].harga);
-    }
-}
-
-forEach(arr);
-forof(arr);
-forin(arr);
-
-// Tambah dari belakang
-arr.push({
-    nama: 'Sprit',
-    harga: 2500,
-});
-
-// Tambah dari depan
-arr.unshift({
-    nama: 'Fanta',
-    harga: 2500
-})
-
-// Tambah data dari tengah berdasarkan index
-arr.splice(2, 0, {
-    nama: 'coca',
-    harga: 2700,
-});
-
-arr.pop(); // hapus dari belakang
-arr.shift(); // hapus dari depan
-arr.splice(2, 1); // hapus dari tengah berdasarkan index
-
-const arr2 = arr.slice(1,3)
-
-console.log(arr, 'arr');
-console.log(arr2);
-
-const storeLocation = data.map((d) => {
-    const mrOrMiss = d.customer.gender === 'M' ? 'Mr' : 'Miss';
-    let userName = d.customer.email.split('@');
-    userName = userName[0]
+const newData = data.map(d => {
     return {
-        id: d.id,
+        idTransaction: d.id,
         storeLocation: d.storeLocation,
-        customerEmail: d.customer.email + 'irfi.com',
-        customerUsername: `${mrOrMiss} ${userName}`        
-    };
-});
-
-const storeLocatedAtDenver = storeLocation.filter(function(d) {
-    return d.storeLocation = 'Denver'
+        userEmail: d.customer.email,
+        purchaseMethod: d.purchaseMethod,
+        item: d.items.map(item => {
+            return {
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+            }
+        })
+    }
 })
+console.log(newData)
 
-console.log(storeLocatedAtDenver);
-const onData = storeLocation.find((d) => {
-    return d.storeLocation = 'Denver'
-})
-
-console.log(onData)
-
-const oneDataIndex = data.findIndex( d => {
-    return d.id == '5bd761dcae323e45a93ccfe8';
-})
-
-let list = ['C', 'D', 'B', 'A'];
-list = [9, 8, 7, 6, 5, 4, 3, 2]
-const sortedList = list.sort((a,b) => {
-    return a-b;
-})
-
-const sortedData = data.sort((a,b) => {
-    return b.saleDate.$date.$numberLong - a.saleDate.$date.$numberLong;
-});
-
-for (const d of sortedData) {
-    console.log(d.saleDate.$date.$numberLong);
+function setLocation(){
+    let locationStore = []
+    data.forEach(d => {
+        const location = d.storeLocation
+        const checkLocation = locationStore.find(e => e.storeLocation == location)
+        if (checkLocation == undefined){
+            locationStore.push({storeLocation: location})
+        }
+    })
+    return locationStore
 }
+const getLocationStore = setLocation()
+console.log(getLocationStore)
 
-const objectArray = {}
-if(typeof objectArray && Array.isArray(objectArray)){
-    console.log('array');
-} else {
-    console.log('bukan array')
+const setTransactionByLocation = () => {
+    let result = setLocation()
+    data.forEach(d => {
+        const { storeLocation, ...log} = d
+        const indexLocation = result.findIndex(e => e.storeLocation == storeLocation)
+        if(result[indexLocation].hasOwnProperty('log') == false){
+            result[indexLocation] = {storeLocation, log:[log]}
+        } else {
+            result[indexLocation].log.push(log)
+        }
+    })
+    return result
 }
+const getTransactionByLocation = setTransactionByLocation()
+console.log(getTransactionByLocation)
 
-let numbers = [15.5, 2.3, 1.1, 4.7];
-result = numbers.reduce(function (total, num){
-    console.log(`total: ${total}, num: ${num}`)
-    return total + num
-}, 0)
+console.log('======================================================')
+const setIncomeById = () => {
+    let getIncomeById = []
+    data.forEach(d => {
+        d.items.forEach(item => {
+            let getIndexIncome = getIncomeById.findIndex(e => e.id == d.id)
+            if(getIndexIncome == -1){
+                getIncomeById.push({
+                    id: d.id,
+                    income: [item.price.$numberDecimal * item.quantity.$numberInt],
+                    storeLocation: d.storeLocation
+                })
+            } else {
+                getIncomeById[getIndexIncome].income.push(
+                    parseFloat(item.price.$numberDecimal) * parseInt(item.quantity.$numberInt)
+                )
+            }
+        })
+    })
 
-console.log(result)
+    const result = getIncomeById.map(i => {
+        const { id, income, storeLocation } = i
+        let totalIncome = i.income.reduce((previousValue, currentValue) => {
+            return previousValue + currentValue
+        }, 0)
+        return {
+            id,
+            income,
+            totalIncome: totalIncome.toFixed(2),
+            storeLocation
+        }
+    })
 
-const totalKeuntungan = data.map(d => {
-    let subTotal = 0;
-    let total = 0;
-    d.items.reduce((total, price) => {
-        subTotal = 
-            parseFloat(price.price.$numberDecimal) *
-            parseInt(price.quantity.$numberInt);
-        return total + subTotal
-    }, 0)
-    return {total: total + subTotal};
+    return result
+}
+const getIncomeById = setIncomeById()
+console.log(getIncomeById)
+
+console.log('======================================================')
+const quantityItemById = data.map(d => {
+    const { id } = d
+    let quantity = []
+    d.items.map(e => {
+        quantity.push(parseInt(e.quantity.$numberInt))
+    })
+    return {
+        id,
+        quantity: quantity.reduce((previousValue, currentValue) => {
+            return previousValue + currentValue
+        }, 0)
+    }
 })
+console.log(quantityItemById)
 
-console.log(totalKeuntungan)
-// console.log(data[0].items)
+console.log('======================================================')
+const setRatingStore = () => {
+    let result = setLocation();
+    
+    let rating = result.map(e => {
+        let ratingArr = []
+        data.forEach(d => {
+            if(d.storeLocation == e.storeLocation){
+                ratingArr.push(parseInt(d.customer.satisfaction.$numberInt))
+            }
+        }
+        )
+        return {
+            storeLocation: e.storeLocation,
+            ratingAll: ratingArr,
+            rating: (ratingArr.reduce((previousValue, currentValue) => {
+                return previousValue + currentValue
+            }) / ratingArr.length).toFixed(2)
+            }
+        }
+    )
+    return rating
+}
+let getRatingStore = setRatingStore();
+console.log(getRatingStore)
+
+console.log('======================================================')
+const setIncomeByLocation = () => {
+    let location = setLocation()
+    let incomeById = setIncomeById()
+    
+    let result = location.map(function (l){
+        let incomeArr = []
+        incomeById.forEach(i => {
+            if(i.storeLocation == l.storeLocation){
+                incomeArr.push(parseInt(i.totalIncome))
+            }
+        })
+        return {
+            storeLocation: l.storeLocation,
+            revenue: 'USD ' + incomeArr.reduce((previousValue, currentValue) => {
+                return previousValue + currentValue
+            })
+        }
+    })
+
+    return result
+}
+const getIncomeByLocation = setIncomeByLocation()
+console.log(getIncomeByLocation)
+
+console.log('======================================================')
+const setTotalTransaction = () => {
+    let incomeArr = []
+    let incomeById = setIncomeById();
+    incomeById.forEach(i => {
+        incomeArr.push(parseFloat(i.totalIncome))
+    })
+    let biggestIncome = incomeArr.reduce((prevValue, currValue) => {
+        return (prevValue > currValue ? prevValue : currValue)
+    })
+    let smallestIncome = incomeArr.reduce((prevValue, currValue) => {
+        return (prevValue < currValue  ? prevValue : currValue)
+    })
+    let totalIncome = incomeArr.reduce((prevValue, currValue) => {
+        return prevValue + currValue
+    })
+    return {
+        biggestIncome: incomeById.find(e => e.totalIncome == biggestIncome),
+        smallestIncome: incomeById.find(e => e.totalIncome == smallestIncome),
+        totalIncome: totalIncome
+    }
+}
+const getTotalTransaction = setTotalTransaction()
+console.log(getTotalTransaction)
